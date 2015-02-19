@@ -1,33 +1,35 @@
 #include "avatar.h"
+#include "gl_objects.h"
 #include <iostream>
+#include <GL/glew.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
 
-#define SDL_VIDEO_MODE_OPTIONS (SDL_RESIZABLE | SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER /*| SDL_OPENGL*/)
+#define SDL_VIDEO_MODE_OPTIONS (SDL_RESIZABLE | SDL_HWSURFACE | SDL_OPENGL)
 #define SDL_DEPTH 32
 
-CAvatar::CAvatar() {}
+#define SCENE_ROTATION_STEP 5
+#define CAMERA_Z_OFFSET 2
+#define CAMERA_TRANSLATION_STEP 0.1
+
+#define RDR_FRAME_LENGTH 1
+#define RDR_CUBE_HALF_SIDE 0.5
+
+CAvatar::CAvatar()
+{
+    InitSceneConstants();
+}
 CAvatar::~CAvatar() {}
 
-int CAvatar::OnExecute()
+void CAvatar::InitSceneConstants()
 {
-    if(OnInit() == false) {
-        return -1;
-    }
+    world_rx = 0;
+    world_ry = 0;
 
-    SDL_Event event;
-    SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
-
-    should_be_running = true;
-
-    while(should_be_running) {
-        while(SDL_PollEvent(&event)) {
-            OnEvent(&event);
-        }
-        OnLoop();
-        OnRender();
-    }
-    OnCleanup();
-
-    return 0;
+    camera_min_tz = world_origin_z + CAMERA_Z_OFFSET;
+    camera_tx = world_origin_x;
+    camera_ty = world_origin_y;
+    camera_tz = camera_min_tz;
 }
 
 bool CAvatar::OnInit()
@@ -54,6 +56,7 @@ bool CAvatar::OnInit()
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
     SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
 
+    /*
     SDL_GL_SetAttribute(SDL_GL_ACCUM_RED_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_ACCUM_GREEN_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_ACCUM_BLUE_SIZE, 8);
@@ -61,12 +64,57 @@ bool CAvatar::OnInit()
 
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 2);
+    */
+
+    //SDL_GL_SetAttribute(SDL_HWSURFACE, 1);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
     sdl_pimage = SDL_SetVideoMode(window_width, window_height, SDL_DEPTH, SDL_VIDEO_MODE_OPTIONS);
     if(sdl_pimage == NULL)
         return false;
 
+    // initialisation d'OpenGL
+
+    glClearColor(0,0,0,0);
+    glViewport(0,0, window_width, window_height);
+
+    camera_aspect_ratio = ((float)window_width) / ((float)window_height);
+    camera_min_z = 0.1;
+    camera_max_z = 10;
+    camera_fovy = 60;
+
+    InitProjectionMatrix();
+
     return true;
+}
+
+void CAvatar::InitProjectionMatrix() {
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(camera_fovy, camera_aspect_ratio, camera_min_z, camera_max_z);
+}
+
+int CAvatar::OnExecute()
+{
+    if(OnInit() == false) {
+        return -1;
+    }
+
+    SDL_Event event;
+    SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
+
+    should_be_running = true;
+
+    while(should_be_running) {
+        while(SDL_PollEvent(&event)) {
+            OnEvent(&event);
+        }
+        OnLoop();
+        OnRender();
+    }
+    OnCleanup();
+
+    return 0;
 }
 
 void CAvatar::OnCleanup()
@@ -88,5 +136,27 @@ void CAvatar::OnLoop()
 
 void CAvatar::OnRender()
 {
+    if(!needs_rendering)
+        return;
+    //needs_rendering = false;
 
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+
+    GLfloat scaling[] = {1, 0,  0, 0,
+                         0, 1.5,0, 0,
+                         0, 0,  1, 0,
+                         0, 0,  0, 1};
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef(-camera_tx, -camera_ty, -camera_tz);
+    glRotatef(world_rx, 1, 0, 0);
+    glRotatef(world_ry, 0, 1, 0);
+    glMultMatrixf(scaling);
+
+    DrawFrame(world_origin_x, world_origin_y, world_origin_z, RDR_FRAME_LENGTH);
+    DrawCube(world_origin_x, world_origin_y, world_origin_z, RDR_CUBE_HALF_SIDE);
+
+    SDL_GL_SwapBuffers();
 }
