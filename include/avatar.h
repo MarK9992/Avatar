@@ -2,14 +2,15 @@
 #define AVATAR_H
 
 #include <SDL/SDL.h>
+#include <events.h>
 
-class CAvatar
+class CAvatar: public CEvent
 {
 private:
     // indique si l'avatar est en train de s'exécuter
     bool should_be_running = false;
 
-    // indique si l'avatar doit être modélisé
+    // indique si l'avatar doit être (re)modélisé
     bool needs_rendering = true;
 
     // dimensions et titre de la fenêtre
@@ -39,19 +40,26 @@ private:
 public:
     CAvatar();
     ~CAvatar();
+
     int OnExecute();
-
     bool OnInit();
-
     void OnCleanup();
     void OnLoop();
     void OnRender();
 
     void OnEvent(SDL_Event*);
+    void OnKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode);
+    void OnResize(int w, int h);
+    void OnExpose();
+    void OnExit();
+    void OnMouseMove(int mX, int mY, int relX, int relY, bool Left,bool Right,bool Middle);
 
     void InitSceneConstants();
-
     void InitProjectionMatrix();
+
+    void translate(double, double);
+    void rotate(int, int);
+    void zoom(int);
 };
 
 #endif // AVATAR_H
