@@ -25,20 +25,21 @@ void CEvent::OnEvent(SDL_Event* Event)
 
         case SDL_MOUSEBUTTONDOWN: {
             switch(Event->button.button) {
-                case SDL_BUTTON_LEFT: {
+                case SDL_BUTTON_LEFT:
                     //OnLButtonDown(Event->button.x,Event->button.y);
                     break;
-                }
-                case SDL_BUTTON_RIGHT: {
+                case SDL_BUTTON_RIGHT:
                     //OnRButtonDown(Event->button.x,Event->button.y);
                     break;
-                }
-                case SDL_BUTTON_MIDDLE: {
+                case SDL_BUTTON_MIDDLE:
                     //OnMButtonDown(Event->button.x,Event->button.y);
                     break;
-                }
-                /*case SDL_MOUSEWHEELUP:
-                    break;*/
+                case SDL_BUTTON_WHEELDOWN:
+                    OnMouseWheel(false, true);
+                    break;
+                case SDL_BUTTON_WHEELUP:
+                    OnMouseWheel(true, false);
+                    break;
             }
             break;
         }
@@ -92,3 +93,4 @@ void CEvent::OnResize(int w, int h) {}
 void CEvent::OnExpose() {}
 void CEvent::OnExit() {}
 void CEvent::OnMouseMove(int mX, int mY, int relX, int relY, bool Left, bool Right, bool Middle) {}
+void CEvent::OnMouseWheel(bool up, bool down) {}

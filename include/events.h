@@ -15,6 +15,7 @@ public:
     virtual void OnExpose();
     virtual void OnExit();
     virtual void OnMouseMove(int mX, int mY, int relX, int relY, bool Left,bool Right,bool Middle);
+    virtual void OnMouseWheel(bool up, bool down);
 };
 
 #endif

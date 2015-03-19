@@ -1,8 +1,6 @@
 #include "avatar.h"
-#include "gl_objects.h"
 #include <iostream>
-#include <GL/glew.h>
-#include <GL/gl.h>
+#include "gl_objects.h"
 #include <GL/glu.h>
 
 using namespace std;
@@ -19,8 +17,31 @@ using namespace std;
 
 CAvatar::CAvatar()
 {
+    should_be_running = false;
+
+    // indique si l'avatar doit être (re)modélisé
+    needs_rendering = true;
+
+    // dimensions et titre de la fenêtre
+    window_width = 0;
+    window_height = 0;
+    window_title = NULL;
+
+    // la surface framebuffer correspondant à la fenêtre
+    sdl_pimage = NULL;
+
+    // l'ID de la texture
+    texture = 0;
+    // ses dimensions
+
+    // coordonnées de l'origine
+    world_origin_x = 0;
+    world_origin_y = 0;
+    world_origin_z = 0;
+
     InitSceneConstants();
 }
+
 CAvatar::~CAvatar() {}
 
 void CAvatar::InitSceneConstants()
@@ -39,6 +60,7 @@ void CAvatar::InitProjectionMatrix() {
     glLoadIdentity();
     gluPerspective(camera_fovy, camera_aspect_ratio, camera_min_z, camera_max_z);
 }
+
 bool CAvatar::OnInit()
 {
     char sdl_wdw_pos[] = "SDL_VIDEO_WINDOW_POS", sdl_wdw_ctr[] = "SDL_VIDEO_CENTERED=1";
@@ -92,10 +114,25 @@ bool CAvatar::OnInit()
 
     InitProjectionMatrix();
 
+    // initialisation de la texture
+    SDL_Surface *temp;
+    if((temp = SDL_LoadBMP("../images/stones.bmp")) == NULL)
+    {
+        cerr << "unable to load texture" << endl;
+    }
+    glEnable(GL_TEXTURE_2D);
+    texture = Load2DTexture(temp->w, temp->h, temp->format->BytesPerPixel, temp->pixels);
+
+    // initialisation de la lumière
+    glEnable(GL_LIGHTING);
+    glShadeModel(GL_SMOOTH);
+    glEnable(GL_LIGHT0);
+
+    // Définissez les paramètres de la source 0
+    glLightfv(GL_LIGHT0, GL_POSITION, 0, 0, 1, 0);
+
     return true;
 }
-
-
 
 int CAvatar::OnExecute()
 {
@@ -158,9 +195,16 @@ void CAvatar::OnRender()
     // on applique l'échelle
     glMultMatrixf(scaling);
 
+    // Juste avant l'affichage, définissez les propriétés du matériau de l'objet
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, {0.8, 0.8, 0.8, 1.0});
+    glMaterialfv(GL_FRONT, GL_SPECULAR, 0, 0, 0, 1);
+    glMaterialf(GL_FRONT, GL_SHININESS, 50.0);
+    glMaterialfv(GL_FRONT, GL_EMISSION, 0, 0, 0, 1);
+
     // on dessine nos objets
     DrawFrame(world_origin_x, world_origin_y, world_origin_z, RDR_FRAME_LENGTH);
-    DrawCube(world_origin_x, world_origin_y, world_origin_z, RDR_CUBE_HALF_SIDE);
+    //DrawCube(world_origin_x, world_origin_y, world_origin_z, RDR_CUBE_HALF_SIDE);
+    DrawCubeWithTexture(world_origin_x, world_origin_y, world_origin_z, RDR_CUBE_HALF_SIDE, texture);
 
     SDL_GL_SwapBuffers();
 }
@@ -236,16 +280,12 @@ void CAvatar::OnKeyDown(SDLKey sym, SDLMod mod, Uint16 unicod)
             break;
 
         case SDLK_q:
-            camera_tz -= CAMERA_TRANSLATION_STEP;
-            if (camera_tz < camera_min_tz)
-            {
-                camera_tz = camera_min_tz;
-            }
+            zoom(-CAMERA_TRANSLATION_STEP);
             needs_rendering = true;
             break;
 
         case SDLK_a:
-            camera_tz += CAMERA_TRANSLATION_STEP;
+            zoom(CAMERA_TRANSLATION_STEP);
             needs_rendering = true;
             break;
     }
@@ -297,14 +337,25 @@ void CAvatar::rotate(int relX, int relY)
     world_ry += relX;
 }
 
-void CAvatar::zoom(int relY)
+void CAvatar::zoom(double relY)
 {
-
+    camera_tz += relY;
+    if (camera_tz < camera_min_tz)
+    {
+        camera_tz = camera_min_tz;
+    }
 }
 
 void CAvatar::OnMouseMove(int mX, int mY, int relX, int relY, bool Left, bool Right, bool Middle)
 {
     if(Left) translate(-((double) relX) / 100, ((double) relY) / 100);
     else if(Right) rotate(relX, relY);
+    needs_rendering = true;
+}
+
+void CAvatar::OnMouseWheel(bool up, bool down)
+{
+    if(up) zoom(CAMERA_TRANSLATION_STEP);
+    else zoom(-CAMERA_TRANSLATION_STEP);
     needs_rendering = true;
 }
