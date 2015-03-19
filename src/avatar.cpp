@@ -129,7 +129,7 @@ bool CAvatar::OnInit()
     glEnable(GL_LIGHT0);
 
     // Définissez les paramètres de la source 0
-    glLightfv(GL_LIGHT0, GL_POSITION, 0, 0, 1, 0);
+    //glLightfv(GL_LIGHT0, GL_POSITION, 0, 0, 1, 0);
 
     return true;
 }
@@ -196,10 +196,12 @@ void CAvatar::OnRender()
     glMultMatrixf(scaling);
 
     // Juste avant l'affichage, définissez les propriétés du matériau de l'objet
+    /*
     glMaterialfv(GL_FRONT, GL_DIFFUSE, {0.8, 0.8, 0.8, 1.0});
     glMaterialfv(GL_FRONT, GL_SPECULAR, 0, 0, 0, 1);
     glMaterialf(GL_FRONT, GL_SHININESS, 50.0);
     glMaterialfv(GL_FRONT, GL_EMISSION, 0, 0, 0, 1);
+    */
 
     // on dessine nos objets
     DrawFrame(world_origin_x, world_origin_y, world_origin_z, RDR_FRAME_LENGTH);
