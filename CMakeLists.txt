@@ -14,7 +14,7 @@ message("CMake module path: ${CMAKE_MODULE_PATH}\n")
 find_package(SDL REQUIRED)
 find_package(SDL_image REQUIRED)
 
-SET(OPENGL_DEPENDENCIES GLU GLEW GL glut)
+SET(OPENGL_DEPENDENCIES GLU GLEW GL glut OpenNI2)
 
 include_directories(
     include

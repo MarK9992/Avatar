@@ -4,6 +4,7 @@
 #include <SDL/SDL.h>
 #include <GL/glew.h>
 #include <events.h>
+#include "sensor.h"
 
 class CAvatar: public CEvent
 {
