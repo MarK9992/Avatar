@@ -15,6 +15,13 @@ private:
     // indique si l'avatar doit être (re)modélisé
     bool needs_rendering;
 
+    // permet de choisir entre un mode qui execute le code developpe
+    // jusqu'a present (false) et le mode sensor qui va executer le code futur du capteur (true)
+    bool sensor_mode;
+
+    //Variable de type CSensor
+    CSensor sensor;
+
     // dimensions et titre de la fenêtre
     int window_width;
     int window_height;
@@ -47,8 +54,12 @@ public:
     CAvatar();
     ~CAvatar();
 
-    int OnExecute();
-    bool OnInit();
+    // Parametre permettant de selectionner le mode code auncien ou le mode sensor
+    int OnExecute(bool mode);
+
+    // Parametre permettant de selectionner le mode code auncien ou le mode sensor
+    bool OnInit(bool mode);
+
     void OnCleanup();
     void OnLoop();
     void OnRender();
@@ -62,7 +73,13 @@ public:
     void OnMouseWheel(bool, bool);
 
     void InitSceneConstants();
-    void InitProjectionMatrix();
+
+    void SetPerspectiveProjectionMatrix();
+
+    void SetOrthoProjectionMatrix();
+
+    void DrawDemo();
+    void DrawSensor();
 
     void translate(double, double);
     void rotate(int, int);

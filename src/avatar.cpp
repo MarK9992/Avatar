@@ -55,17 +55,20 @@ void CAvatar::InitSceneConstants()
     camera_tz = camera_min_tz;
 }
 
-void CAvatar::InitProjectionMatrix() {
+void CAvatar::SetPerspectiveProjectionMatrix() {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(camera_fovy, camera_aspect_ratio, camera_min_z, camera_max_z);
 }
 
-bool CAvatar::OnInit()
+bool CAvatar::OnInit(bool mode)
 {
     char sdl_wdw_pos[] = "SDL_VIDEO_WINDOW_POS", sdl_wdw_ctr[] = "SDL_VIDEO_CENTERED=1";
+
     putenv(sdl_wdw_pos);
     putenv(sdl_wdw_ctr);
+
+    sensor_mode = mode;
 
     if(SDL_Init(SDL_INIT_EVERYTHING) < 0) {
         return false;
@@ -112,7 +115,7 @@ bool CAvatar::OnInit()
     camera_max_z = 10;
     camera_fovy = 60;
 
-    InitProjectionMatrix();
+    SetPerspectiveProjectionMatrix();
 
     // initialisation de la texture
     SDL_Surface *temp;
@@ -135,9 +138,9 @@ bool CAvatar::OnInit()
     return true;
 }
 
-int CAvatar::OnExecute()
+int CAvatar::OnExecute(bool mode)
 {
-    if(OnInit() == false) {
+    if(OnInit(mode) == false) {
         return -1;
     }
 
@@ -172,45 +175,15 @@ void CAvatar::OnLoop()
 
 void CAvatar::OnRender()
 {
-    if(!needs_rendering)
-        return;
-    //needs_rendering = false;
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_DEPTH_TEST);
-
-    GLfloat scaling[] = {1, 0,  0, 0,
-                         0, 1.5,0, 0,
-                         0, 0,  1, 0,
-                         0, 0,  0, 1};
-
-    glMatrixMode(GL_MODELVIEW);
-    // on initialise à l'identité
-    glLoadIdentity();
-    // on se déplace à la position de la caméra
-    glTranslatef(-camera_tx, -camera_ty, -camera_tz);
-    // on effectue la rotation selon x
-    glRotatef(world_rx, 1, 0, 0);
-    // on effectue la rotation selon y
-    glRotatef(world_ry, 0, 1, 0);
-    // on applique l'échelle
-    glMultMatrixf(scaling);
-
-    // Juste avant l'affichage, définissez les propriétés du matériau de l'objet
-    GLfloat paramsDiffuse[4] = {0.8, 0.8, 0.8, 1.0};
-    GLfloat paramsSpecular[4] = {0, 0, 0, 1};
-    GLfloat paramsEmission[4] = {0.5, 0.5, 0.5, 1};
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, paramsDiffuse);
-    glMaterialfv(GL_FRONT, GL_SPECULAR, paramsSpecular);
-    glMaterialf(GL_FRONT, GL_SHININESS, 50.0);
-    glMaterialfv(GL_FRONT, GL_EMISSION, paramsEmission);
-
-    // on dessine nos objets
-    DrawFrame(world_origin_x, world_origin_y, world_origin_z, RDR_FRAME_LENGTH);
-    //DrawCube(world_origin_x, world_origin_y, world_origin_z, RDR_CUBE_HALF_SIDE);
-    DrawCubeWithTexture(world_origin_x, world_origin_y, world_origin_z, RDR_CUBE_HALF_SIDE, texture);
-
-    SDL_GL_SwapBuffers();
+    // on appelle  la methode on fontion du mode choisi
+    if(sensor_mode)
+    {
+        CAvatar::DrawSensor();
+    }
+    else
+    {
+        CAvatar::DrawDemo();
+    }
 }
 
 void CAvatar::OnEvent(SDL_Event * Event)
@@ -306,7 +279,7 @@ void CAvatar::OnResize(int w,int h)
     glViewport(0, 0, window_width, window_height);
 
     camera_aspect_ratio = ((float)window_height) / ((float)window_height);
-    InitProjectionMatrix();
+    SetPerspectiveProjectionMatrix();
 
     needs_rendering = true;
 }
@@ -362,4 +335,57 @@ void CAvatar::OnMouseWheel(bool up, bool down)
     if(up) zoom(CAMERA_TRANSLATION_STEP);
     else zoom(-CAMERA_TRANSLATION_STEP);
     needs_rendering = true;
+}
+
+// la methode contient le ancien code de OnRender
+void CAvatar::DrawDemo()
+{
+    if(!needs_rendering)
+        return;
+    //needs_rendering = false;
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+
+    GLfloat scaling[] = {1, 0,  0, 0,
+                         0, 1.5,0, 0,
+                         0, 0,  1, 0,
+                         0, 0,  0, 1};
+
+    glMatrixMode(GL_MODELVIEW);
+    // on initialise à l'identité
+    glLoadIdentity();
+    // on se déplace à la position de la caméra
+    glTranslatef(-camera_tx, -camera_ty, -camera_tz);
+    // on effectue la rotation selon x
+    glRotatef(world_rx, 1, 0, 0);
+    // on effectue la rotation selon y
+    glRotatef(world_ry, 0, 1, 0);
+    // on applique l'échelle
+    glMultMatrixf(scaling);
+
+    // Juste avant l'affichage, définissez les propriétés du matériau de l'objet
+    GLfloat paramsDiffuse[4] = {0.8, 0.8, 0.8, 1.0};
+    GLfloat paramsSpecular[4] = {0, 0, 0, 1};
+    GLfloat paramsEmission[4] = {0.5, 0.5, 0.5, 1};
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, paramsDiffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, paramsSpecular);
+    glMaterialf(GL_FRONT, GL_SHININESS, 50.0);
+    glMaterialfv(GL_FRONT, GL_EMISSION, paramsEmission);
+
+    // on dessine nos objets
+    DrawFrame(world_origin_x, world_origin_y, world_origin_z, RDR_FRAME_LENGTH);
+    //DrawCube(world_origin_x, world_origin_y, world_origin_z, RDR_CUBE_HALF_SIDE);
+    DrawCubeWithTexture(world_origin_x, world_origin_y, world_origin_z, RDR_CUBE_HALF_SIDE, texture);
+
+    SDL_GL_SwapBuffers();
+}
+
+void CAvatar::DrawSensor()
+{
+
+}
+void CAvatar::SetOrthoProjectionMatrix()
+{
+
 }
