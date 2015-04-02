@@ -18,7 +18,7 @@ using namespace std;
 CAvatar::CAvatar()
 {
     should_be_running = false;
-
+    //debug git
     // indique si l'avatar doit être (re)modélisé
     needs_rendering = true;
 
