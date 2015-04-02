@@ -278,11 +278,11 @@ void CAvatar::OnKeyDown(SDLKey sym, SDLMod mod, Uint16 unicod)
             break;
 
         case SDLK_c:
-            switchStream(color_stream);
+            SwitchStream(color_stream);
             break;
 
-        case SDLJ_p:
-            swicthStream(depth_stream);
+        case SDLK_p:
+            SwitchStream(depth_stream);
             break;
     }
 }
@@ -412,9 +412,13 @@ void CAvatar::SetOrthoProjectionMatrix()
     glOrtho(0, 1, 0, 1, -10, 10);
 }
 
+/**
+ * @brief SwitchStream
+ * change le stream actif pour celui passe en parametre
+ */
 void CAvatar::SwitchStream(EActiveStream stream)
 {
     InitSceneConstants();
     glMatrixMode(GL_MODELVIEW);
-
+    sensor.active_stream = stream;
 }
