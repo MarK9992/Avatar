@@ -115,25 +115,36 @@ bool CAvatar::OnInit(bool mode)
     camera_max_z = 10;
     camera_fovy = 60;
 
-    SetPerspectiveProjectionMatrix();
-
-    // initialisation de la texture
-    SDL_Surface *temp;
-    if((temp = SDL_LoadBMP("../images/stones.bmp")) == NULL)
+    if(!sensor_mode)
     {
-        cerr << "unable to load texture" << endl;
+        SetPerspectiveProjectionMatrix();
+
+        // initialisation de la texture
+        SDL_Surface *temp;
+        if((temp = SDL_LoadBMP("../images/stones.bmp")) == NULL)
+        {
+            cerr << "unable to load texture" << endl;
+        }
+        glEnable(GL_TEXTURE_2D);
+        texture = Load2DTexture(temp->w, temp->h, temp->format->BytesPerPixel, temp->pixels);
+
+        // initialisation de la lumière
+        glEnable(GL_LIGHTING);
+        glShadeModel(GL_SMOOTH);
+        glEnable(GL_LIGHT0);
+
+        // Définissez les paramètres de la source 0
+        GLfloat params[4] = {1, -1, 1, 0};
+        glLightfv(GL_LIGHT0, GL_POSITION, params);
     }
-    glEnable(GL_TEXTURE_2D);
-    texture = Load2DTexture(temp->w, temp->h, temp->format->BytesPerPixel, temp->pixels);
-
-    // initialisation de la lumière
-    glEnable(GL_LIGHTING);
-    glShadeModel(GL_SMOOTH);
-    glEnable(GL_LIGHT0);
-
-    // Définissez les paramètres de la source 0
-    GLfloat params[4] = {1, -1, 1, 0};
-    glLightfv(GL_LIGHT0, GL_POSITION, params);
+    else
+    {
+        SetOrthoProjectionMatrix();
+        if(!sensor.OnInit(true))
+        {
+            return false;
+        }
+    }
 
     return true;
 }
@@ -265,6 +276,14 @@ void CAvatar::OnKeyDown(SDLKey sym, SDLMod mod, Uint16 unicod)
             zoom(CAMERA_TRANSLATION_STEP);
             needs_rendering = true;
             break;
+
+        case SDLK_c:
+            switchStream(color_stream);
+            break;
+
+        case SDLJ_p:
+            swicthStream(depth_stream);
+            break;
     }
 }
 
@@ -364,7 +383,7 @@ void CAvatar::DrawDemo()
     // on applique l'échelle
     glMultMatrixf(scaling);
 
-    // Juste avant l'affichage, définissez les propriétés du matériau de l'objet
+    // Définition des propriétés du matériau de l'objet
     GLfloat paramsDiffuse[4] = {0.8, 0.8, 0.8, 1.0};
     GLfloat paramsSpecular[4] = {0, 0, 0, 1};
     GLfloat paramsEmission[4] = {0.5, 0.5, 0.5, 1};
@@ -385,7 +404,17 @@ void CAvatar::DrawSensor()
 {
 
 }
+
 void CAvatar::SetOrthoProjectionMatrix()
 {
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, 1, 0, 1, -10, 10);
+}
+
+void CAvatar::SwitchStream(EActiveStream stream)
+{
+    InitSceneConstants();
+    glMatrixMode(GL_MODELVIEW);
 
 }

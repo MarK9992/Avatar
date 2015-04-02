@@ -81,6 +81,8 @@ public:
     void DrawDemo();
     void DrawSensor();
 
+    void SwitchStream(EActiveStream);
+
     void translate(double, double);
     void rotate(int, int);
     void zoom(double);
