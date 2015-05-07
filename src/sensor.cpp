@@ -29,10 +29,6 @@ bool CSensor::OnInit(bool show_color_stream)
     // ouverture du peripherique de detection
     if(m_device.open(ANY_DEVICE) != STATUS_OK) {cout << OpenNI::getExtendedError() << endl; return false;}
 
-    // proprietes de detection
-    if(m_device.setImageRegistrationMode(IMAGE_REGISTRATION_DEPTH_TO_COLOR) != STATUS_OK) {cout << OpenNI::getExtendedError() << endl; return false;}
-    if(m_device.setDepthColorSyncEnabled(true) != STATUS_OK) {cout << OpenNI::getExtendedError() << endl; return false;}
-
     // creation du flux video couleur
     if(m_colorStream.create(m_device, SENSOR_COLOR) != STATUS_OK) {cout << OpenNI::getExtendedError() << endl; return false;}
     if(m_colorStream.start() != STATUS_OK) {cout << OpenNI::getExtendedError() << endl; return false;}
@@ -46,4 +42,32 @@ bool CSensor::OnInit(bool show_color_stream)
     // affectation du flux video actif
     if(show_color_stream) active_stream = color_stream;
     else active_stream = depth_stream;
+
+    // proprietes de detection
+    if(m_device.isImageRegistrationModeSupported(IMAGE_REGISTRATION_DEPTH_TO_COLOR)) {
+        if(m_device.setImageRegistrationMode(IMAGE_REGISTRATION_DEPTH_TO_COLOR) != STATUS_OK) {
+            cout << OpenNI::getExtendedError() << endl; return false;
+        }
+    }
+    if(m_device.setDepthColorSyncEnabled(!show_color_stream) != STATUS_OK) {
+        cout << OpenNI::getExtendedError() << endl; return false;
+    }
+
+    return true;
+}
+
+void CSensor::SwitchActiveStream(EActiveStream stream) {
+    switch (stream) {
+    case color_stream:
+        active_stream = color_stream;
+        if(m_device.setDepthColorSyncEnabled(false) != STATUS_OK)
+            cout << OpenNI::getExtendedError() << endl;
+        break;
+    case depth_stream:
+        active_stream = depth_stream;
+        if(m_device.setDepthColorSyncEnabled(true) != STATUS_OK)
+            cout << OpenNI::getExtendedError() << endl;
+        break;
+    default:;
+    }
 }

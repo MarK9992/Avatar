@@ -21,6 +21,7 @@ public:
     ~CSensor();
 
     bool OnInit(bool show_color_stream);
+    void SwitchActiveStream(EActiveStream);
 };
 
 #endif // _SENSOR_H_

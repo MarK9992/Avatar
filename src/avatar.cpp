@@ -140,6 +140,7 @@ bool CAvatar::OnInit(bool mode)
     else
     {
         SetOrthoProjectionMatrix();
+        glEnable(GL_TEXTURE_2D);
         if(!sensor.OnInit(true))
         {
             return false;
@@ -186,6 +187,26 @@ void CAvatar::OnLoop()
 
 void CAvatar::OnRender()
 {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+
+    GLfloat scaling[] = {1, 0,  0, 0,
+                         0, 1.5,0, 0,
+                         0, 0,  1, 0,
+                         0, 0,  0, 1};
+
+    glMatrixMode(GL_MODELVIEW);
+    // on initialise à l'identité
+    glLoadIdentity();
+    // on se déplace à la position de la caméra
+    glTranslatef(-camera_tx, -camera_ty, -camera_tz);
+    // on effectue la rotation selon x
+    glRotatef(world_rx, 1, 0, 0);
+    // on effectue la rotation selon y
+    glRotatef(world_ry, 0, 1, 0);
+    // on applique l'échelle
+    glMultMatrixf(scaling);
+
     // on appelle  la methode on fontion du mode choisi
     if(sensor_mode)
     {
@@ -195,6 +216,8 @@ void CAvatar::OnRender()
     {
         CAvatar::DrawDemo();
     }
+
+    SDL_GL_SwapBuffers();
 }
 
 void CAvatar::OnEvent(SDL_Event * Event)
@@ -356,32 +379,14 @@ void CAvatar::OnMouseWheel(bool up, bool down)
     needs_rendering = true;
 }
 
+
+
 // la methode contient le ancien code de OnRender
 void CAvatar::DrawDemo()
 {
     if(!needs_rendering)
         return;
-    //needs_rendering = false;
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_DEPTH_TEST);
-
-    GLfloat scaling[] = {1, 0,  0, 0,
-                         0, 1.5,0, 0,
-                         0, 0,  1, 0,
-                         0, 0,  0, 1};
-
-    glMatrixMode(GL_MODELVIEW);
-    // on initialise à l'identité
-    glLoadIdentity();
-    // on se déplace à la position de la caméra
-    glTranslatef(-camera_tx, -camera_ty, -camera_tz);
-    // on effectue la rotation selon x
-    glRotatef(world_rx, 1, 0, 0);
-    // on effectue la rotation selon y
-    glRotatef(world_ry, 0, 1, 0);
-    // on applique l'échelle
-    glMultMatrixf(scaling);
+    needs_rendering = false;
 
     // Définition des propriétés du matériau de l'objet
     GLfloat paramsDiffuse[4] = {0.8, 0.8, 0.8, 1.0};
@@ -396,13 +401,34 @@ void CAvatar::DrawDemo()
     DrawFrame(world_origin_x, world_origin_y, world_origin_z, RDR_FRAME_LENGTH);
     //DrawCube(world_origin_x, world_origin_y, world_origin_z, RDR_CUBE_HALF_SIDE);
     DrawCubeWithTexture(world_origin_x, world_origin_y, world_origin_z, RDR_CUBE_HALF_SIDE, texture);
-
-    SDL_GL_SwapBuffers();
 }
 
 void CAvatar::DrawSensor()
 {
+    //if(sensor.active_stream == color_stream)
+    //{
+        openni::VideoFrameRef m_colorFrame;
 
+        sensor.m_colorStream.readFrame(&m_colorFrame);
+        if (! m_colorFrame.isValid())
+            return;
+
+        const openni::RGB888Pixel* pImage = (const openni::RGB888Pixel*) m_colorFrame.getData();
+    //}
+    /* TODO flux profondeur
+    else
+    {
+       openni::VideoFrameRef m_depthFrame;
+
+       sensor.m_depthStream.readFrame(&m_depthFrame);
+       if(!m_depthFrame.isValid())
+           return;
+
+       const openni::RG
+    }*/
+    texture = Load2DTexture(m_colorFrame.getWidth(), m_colorFrame.getHeight(), 3, pImage);
+    FillWindowWithTexture(texture);
+    glDeleteTextures(1, &texture);
 }
 
 void CAvatar::SetOrthoProjectionMatrix()
@@ -420,5 +446,5 @@ void CAvatar::SwitchStream(EActiveStream stream)
 {
     InitSceneConstants();
     glMatrixMode(GL_MODELVIEW);
-    sensor.active_stream = stream;
+    sensor.SwitchActiveStream(stream);
 }

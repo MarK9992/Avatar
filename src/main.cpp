@@ -6,5 +6,5 @@ int main(int argc, char *argv[])
     std::cout << "\nThe Avatar Project!" << std::endl;
 
     CAvatar theAvatar;
-    return theAvatar.OnExecute(false);
+    return theAvatar.OnExecute(true);
 }

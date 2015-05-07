@@ -148,3 +148,18 @@ half_side, GLuint texture)
         glVertex3f(origin_x+half_side, origin_y-half_side, origin_z-half_side);
     glEnd();
 }
+
+void FillWindowWithTexture(GLuint texture_ID) {
+    glBindTexture(GL_TEXTURE_2D, texture_ID);
+    // Méthode de dessin remplissant la zone créée par 4 points
+    glBegin(GL_QUADS);
+        glTexCoord2d(0, 0);
+        glVertex3f(1, 1, 0);
+        glTexCoord2d(0, 1);
+        glVertex3f(1, 0, 0);
+        glTexCoord2d(1, 1);
+        glVertex3f(0, 0, 0);
+        glTexCoord2d(1, 0);
+        glVertex3f(0, 1, 0);
+    glEnd();
+}
