@@ -11,6 +11,7 @@ CSensor::CSensor()
 
 CSensor::~CSensor()
 {
+    cout << "Device shutting down..." << endl;
     // arret et destruction des flux videos
     m_colorStream.stop();
     m_colorStream.destroy();
@@ -19,6 +20,7 @@ CSensor::~CSensor()
 
     // fermeture de la session OpenNI
     OpenNI::shutdown();
+    cout << "DONE" << endl;
 }
 
 bool CSensor::OnInit(bool show_color_stream)

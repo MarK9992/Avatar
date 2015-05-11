@@ -405,34 +405,61 @@ void CAvatar::DrawDemo()
 
 void CAvatar::DrawSensor()
 {
-    //if(sensor.active_stream == color_stream)
-    //{
-        openni::VideoFrameRef m_colorFrame;
+    openni::VideoFrameRef m_colorFrame;
 
-        sensor.m_colorStream.readFrame(&m_colorFrame);
-        if (! m_colorFrame.isValid())
-            return;
+    sensor.m_colorStream.readFrame(&m_colorFrame);
+    if (! m_colorFrame.isValid())
+        return;
 
-        const openni::RGB888Pixel* pImage = (const openni::RGB888Pixel*) m_colorFrame.getData();
-    //}
-    /* TODO flux profondeur
+    const openni::RGB888Pixel* pImage = (const openni::RGB888Pixel*) m_colorFrame.getData();
+
+    if(sensor.active_stream == color_stream)
+    {
+        texture = Load2DTexture(m_colorFrame.getWidth(), m_colorFrame.getHeight(), 3, pImage);
+        FillWindowWithTexture(texture);
+        glDeleteTextures(1, &texture);
+    }
     else
     {
        openni::VideoFrameRef m_depthFrame;
 
        sensor.m_depthStream.readFrame(&m_depthFrame);
-       if(!m_depthFrame.isValid())
+       if (! m_depthFrame.isValid())
            return;
 
-       const openni::RG
-    }*/
-    texture = Load2DTexture(m_colorFrame.getWidth(), m_colorFrame.getHeight(), 3, pImage);
-    FillWindowWithTexture(texture);
-    glDeleteTextures(1, &texture);
+       const openni::DepthPixel* pDepth = (const openni::DepthPixel*) m_depthFrame.getData();
+
+       // n'oubliez pas d'effacer les buffers couleur et profondeur d'OpenGL
+       int width = m_depthFrame.getWidth();
+       int height = m_depthFrame.getHeight();
+       float pWorldX, pWorldY, pWorldZ;
+       // définissez la matrice ModeLView comme d'habiture (fait plus haut)
+
+       glEnable(GL_DEPTH_TEST);
+       glPointSize(2);
+       glBegin(GL_POINTS);
+
+       for (int y = 0; y < height; y++) {
+           for (int x = 0; x < width; x++) {
+               if ((x % 2 == 0) && (y % 2 == 0) && (*pDepth != 0)) {
+                   openni::CoordinateConverter::convertDepthToWorld(sensor.m_depthStream,
+                                                                    x, y, *pDepth, &pWorldX,
+                                                                    &pWorldY, &pWorldZ);
+                   glColor3f(1,1,1);
+                   glVertex3f(pWorldX / 1000.0, pWorldY / 1000.0, pWorldZ / 1000.0);
+               }
+           }
+           pDepth++;
+           pImage++;
+       }
+    }
 }
 
 void CAvatar::SetOrthoProjectionMatrix()
 {
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0, 1, 0, 1, -10, 10);
@@ -445,6 +472,9 @@ void CAvatar::SetOrthoProjectionMatrix()
 void CAvatar::SwitchStream(EActiveStream stream)
 {
     InitSceneConstants();
-    glMatrixMode(GL_MODELVIEW);
     sensor.SwitchActiveStream(stream);
+    if (sensor.active_stream == color_stream)
+        SetOrthoProjectionMatrix();
+    else
+        SetPerspectiveProjectionMatrix();
 }
