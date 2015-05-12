@@ -448,13 +448,15 @@ void CAvatar::DrawSensor()
                    openni::CoordinateConverter::convertDepthToWorld(sensor.m_depthStream,
                                                                     x, y, *pDepth, &pWorldX,
                                                                     &pWorldY, &pWorldZ);
-                   glColor3f(100,100,100);
+                   glColor3f(pImage->r / 255.0, pImage->g / 255.0, pImage->b / 255.0);
                    glVertex3f(pWorldX / 1000.0, pWorldY / 1000.0, pWorldZ / 1000.0);
                }
+               pDepth++;
+               pImage++;
            }
-           pDepth++;
-           pImage++;
        }
+
+       glEnd();
     }
 }
 
