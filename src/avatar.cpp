@@ -187,6 +187,13 @@ void CAvatar::OnLoop()
 
 void CAvatar::OnRender()
 {
+    if (!sensor_mode)
+    {
+        if (!needs_rendering)
+            return;
+        needs_rendering = false;
+    }
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
 
@@ -384,10 +391,6 @@ void CAvatar::OnMouseWheel(bool up, bool down)
 // la methode contient le ancien code de OnRender
 void CAvatar::DrawDemo()
 {
-    if(!needs_rendering)
-        return;
-    needs_rendering = false;
-
     // Définition des propriétés du matériau de l'objet
     GLfloat paramsDiffuse[4] = {0.8, 0.8, 0.8, 1.0};
     GLfloat paramsSpecular[4] = {0, 0, 0, 1};
@@ -445,13 +448,15 @@ void CAvatar::DrawSensor()
                    openni::CoordinateConverter::convertDepthToWorld(sensor.m_depthStream,
                                                                     x, y, *pDepth, &pWorldX,
                                                                     &pWorldY, &pWorldZ);
-                   glColor3f(1,1,1);
+                   glColor3f(pImage->r / 255.0, pImage->g / 255.0, pImage->b / 255.0);
                    glVertex3f(pWorldX / 1000.0, pWorldY / 1000.0, pWorldZ / 1000.0);
                }
+               pDepth++;
+               pImage++;
            }
-           pDepth++;
-           pImage++;
        }
+
+       glEnd();
     }
 }
 
