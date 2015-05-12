@@ -18,7 +18,7 @@ using namespace std;
 CAvatar::CAvatar()
 {
     should_be_running = false;
-    //debug git
+
     // indique si l'avatar doit être (re)modélisé
     needs_rendering = true;
 
@@ -88,15 +88,7 @@ bool CAvatar::OnInit(bool mode)
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
     SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
 
-    /*
-    SDL_GL_SetAttribute(SDL_GL_ACCUM_RED_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_ACCUM_GREEN_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_ACCUM_BLUE_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_ACCUM_ALPHA_SIZE, 8);
 
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 2);
-    */
 
     //SDL_GL_SetAttribute(SDL_HWSURFACE, 1);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -229,7 +221,7 @@ void CAvatar::OnRender()
 
 void CAvatar::OnEvent(SDL_Event * Event)
 {
-    CEvent::OnEvent(Event); // voir tutoriel en ligne
+    CEvent::OnEvent(Event);
 }
 
 void CAvatar::OnKeyDown(SDLKey sym, SDLMod mod, Uint16 unicod)
@@ -436,14 +428,15 @@ void CAvatar::DrawSensor()
        int width = m_depthFrame.getWidth();
        int height = m_depthFrame.getHeight();
        float pWorldX, pWorldY, pWorldZ;
-       // définissez la matrice ModeLView comme d'habiture (fait plus haut)
 
+       // définissez la matrice ModeLView comme d'habiture (fait plus haut)
        glEnable(GL_DEPTH_TEST);
        glPointSize(2);
        glBegin(GL_POINTS);
 
        for (int y = 0; y < height; y++) {
            for (int x = 0; x < width; x++) {
+               // On garde 1 pixel sur 2
                if ((x % 2 == 0) && (y % 2 == 0) && (*pDepth != 0)) {
                    openni::CoordinateConverter::convertDepthToWorld(sensor.m_depthStream,
                                                                     x, y, *pDepth, &pWorldX,
